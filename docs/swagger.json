@@ -1,0 +1,5 @@
+{
+    "swagger": "2.0"
+}
+
+docker run --name mongo-local -v /Users/jb/development/stash/data:/data/db -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=password   -d mongo
