@@ -45,8 +45,8 @@ func getAllUsers(q string, page int, limit int) (users []User, err error) {
 	cursor, err := userCollection.Find(ctx,
 		bson.M{
 			"$or": []bson.M{
-				{"name": primitive.Regex{Pattern: q, Options: "i"}},
-				{"location": primitive.Regex{Pattern: q, Options: "i"}},
+				{"first_name": primitive.Regex{Pattern: q, Options: "i"}},
+				{"last_name": primitive.Regex{Pattern: q, Options: "i"}},
 			},
 		}, options)
 
@@ -58,6 +58,9 @@ func getAllUsers(q string, page int, limit int) (users []User, err error) {
 
 		}
 		results = append(results, elem)
+	}
+	if len(results) < 1 {
+		return []User{}, err
 	}
 	return results, err
 }

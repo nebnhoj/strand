@@ -1,9 +1,8 @@
 package helpers
 
 import (
-	"strings"
-
 	"github.com/go-playground/validator"
+	"github.com/iancoleman/strcase"
 )
 
 var Validate = validator.New()
@@ -27,8 +26,7 @@ func Validator(data interface{}) []ErrorResponse {
 	if errs != nil {
 		for _, err := range errs.(validator.ValidationErrors) {
 			var elem ErrorResponse
-
-			elem.FailedField = strings.ToLower(err.Field()) // Export struct field name
+			elem.FailedField = strcase.ToSnake(err.Field()) // Export struct field name
 			elem.Tag = err.Tag()                            // Export struct tag
 			elem.Value = err.Value()                        // Export field value
 			elem.Error = true

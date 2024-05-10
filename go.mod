@@ -17,6 +17,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.4
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.6.0
+	github.com/iancoleman/strcase v0.3.0
 	github.com/joho/godotenv v1.5.1
 	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect

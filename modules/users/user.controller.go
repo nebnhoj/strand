@@ -1,11 +1,14 @@
 package users
 
 import (
+	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 	helpers "schuler.com/be-schuler/helpers"
 )
 
@@ -35,24 +38,29 @@ func GetUser(c *fiber.Ctx) error {
 }
 
 func CreateUser(c *fiber.Ctx) error {
-	var user User
+	var user UserDTO
 	//validate the request body
 	if err := c.BodyParser(&user); err != nil {
 		return helpers.ResponseError(c, http.StatusBadRequest, err)
 	}
-
-	//use the validator library to validate required fields
 
 	if errs := helpers.Validator(user); len(errs) > 0 && errs[0].Error {
 		return helpers.ResponseError(c, http.StatusBadRequest, errs)
 	}
 
 	newUser := User{
-		Id:       uuid.NewString(),
-		Name:     user.Name,
-		Location: user.Location,
-		Title:    user.Title,
-		Email:    user.Email,
+		Id:        uuid.NewString(),
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Title:     user.Title,
+		Email:     strings.ToLower(user.Email),
+		Password:  hash(user.Password),
+		Address: Address{
+			City:     user.Address.City,
+			Street:   user.Address.Street,
+			Province: user.Address.Province,
+			Country:  user.Address.Country,
+		},
 	}
 
 	result, err := create(newUser)
@@ -66,4 +74,12 @@ func CreateUser(c *fiber.Ctx) error {
 
 type Message struct {
 	Content string `json:"content"`
+}
+
+func hash(password string) string {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(hashedPassword)
 }
