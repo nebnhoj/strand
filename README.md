@@ -1,4 +1,4 @@
-# Your Fiber Go Application
+# Strand Fiber Go Boilerplate
 
 ## Introduction
 
