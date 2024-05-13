@@ -35,25 +35,24 @@ func Protected() func(*fiber.Ctx) error {
 	return jwtware.New(jwtwareConfig)
 }
 
-func IsAdmin(c *fiber.Ctx) error {
-	user := c.Locals("user").(*jwt.Token)
-	claims := user.Claims.(jwt.MapClaims)
-	isAdmin := claims["isAdmin"]
+// func IsAdmin(c *fiber.Ctx) error {
+// 	user := c.Locals("user").(*jwt.Token)
+// 	claims := user.Claims.(jwt.MapClaims)
+// 	isAdmin := claims["isAdmin"]
 
-	if !isAdmin.(bool) {
-		return helpers.ResponseError(c, http.StatusForbidden, error_message.FORBIDDEN)
+// 	if !isAdmin.(bool) {
+// 		return helpers.ResponseError(c, http.StatusForbidden, error_message.FORBIDDEN)
 
-	}
-	return c.Next()
+// 	}
+// 	return c.Next()
 
-}
+// }
 
 type CustomClaims struct {
 	jwt.Claims `json:"-"`
-	User       users.User `json:"user"`
-	Roles      []string   `json:"roles"`
-	Admin      bool       `json:"isAdmin"`
-	Expiration int64      `json:"exp"`
+	Email      string   `json:"email"`
+	Roles      []string `json:"roles"`
+	Expiration int64    `json:"exp"`
 }
 
 func HasAdminRole(c *fiber.Ctx) error {
@@ -97,9 +96,8 @@ func jwtError(c *fiber.Ctx, err error) error {
 
 func CreateJWTClaim(user users.User) (string, error) {
 	claims := CustomClaims{
-		User:       user,
-		Admin:      true,
-		Roles:      []string{"ADMIN"},
+		Email:      user.Email,
+		Roles:      user.Roles,
 		Expiration: time.Now().Add(time.Hour * 72).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

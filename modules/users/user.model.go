@@ -1,13 +1,14 @@
 package users
 
 type User struct {
-	Id        string  `bson:"_id" json:"id,omitempty"`
-	FirstName string  `bson:"first_name" json:"first_name" validate:"required"`
-	LastName  string  `bson:"last_name" json:"last_name" validate:"required"`
-	Title     string  `json:"title" validate:"omitempty,required"`
-	Email     string  `json:"email" validate:"omitempty,email"`
-	Password  string  `json:"-" validate:"omitempty,required"`
-	Address   Address `json:"address" validate:"required"`
+	Id        string   `bson:"_id" json:"id,omitempty"`
+	FirstName string   `bson:"first_name" json:"first_name" validate:"required"`
+	LastName  string   `bson:"last_name" json:"last_name" validate:"required"`
+	Title     string   `json:"title" validate:"omitempty,required"`
+	Email     string   `json:"email" validate:"omitempty,email"`
+	Password  string   `json:"-" validate:"omitempty,required"`
+	Address   Address  `json:"address" validate:"required"`
+	Roles     []string `json:"roles" validate:"required"`
 }
 
 type UserDTO struct {

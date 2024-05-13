@@ -7,23 +7,15 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	helpers "github.com/nebnhoj/strand/helpers"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func GetUsers(c *fiber.Ctx) error {
-
-	token := c.Locals("user").(*jwt.Token)
-	claims := token.Claims.(jwt.MapClaims)
-	user := claims["user"]
-	log.Printf("User: %s", user)
-
 	pageStr := c.Query("page")
 	limitStr := c.Query("limit")
 	q := c.Query("q")
-
 	// Convert pagination parameters to integers
 	page, _ := strconv.Atoi(pageStr)
 	limit, _ := strconv.Atoi(limitStr)
@@ -62,6 +54,7 @@ func CreateUser(c *fiber.Ctx) error {
 		Title:     user.Title,
 		Email:     strings.ToLower(user.Email),
 		Password:  Hash(user.Password),
+		Roles:     user.Roles,
 		Address: Address{
 			City:     user.Address.City,
 			Street:   user.Address.Street,

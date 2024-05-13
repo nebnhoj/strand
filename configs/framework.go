@@ -17,7 +17,7 @@ func SetFiberConfig() fiber.Config {
 		Prefork:       true,
 		CaseSensitive: true,
 		StrictRouting: true,
-		ServerHeader:  "Fiber",
+		ServerHeader:  os.Getenv("APP_HEADER"),
 		AppName:       os.Getenv("APP_NAME"),
 	}
 }
