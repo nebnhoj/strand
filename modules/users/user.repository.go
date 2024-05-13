@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
+	"github.com/nebnhoj/strand/configs"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"schuler.com/be-schuler/configs"
 )
 
 var userCollection *mongo.Collection = configs.GetCollection(configs.DB, "users")
@@ -70,5 +70,13 @@ func getUserByID(id string) (user User, err error) {
 	defer cancel()
 	var result User
 	err = userCollection.FindOne(ctx, bson.M{"_id": id}).Decode(&result)
+	return result, err
+}
+
+func GetUserByEmail(email string) (user User, err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	var result User
+	err = userCollection.FindOne(ctx, bson.M{"email": email}).Decode(&result)
 	return result, err
 }

@@ -7,12 +7,19 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	helpers "github.com/nebnhoj/strand/helpers"
 	"golang.org/x/crypto/bcrypt"
-	helpers "schuler.com/be-schuler/helpers"
 )
 
 func GetUsers(c *fiber.Ctx) error {
+
+	token := c.Locals("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	user := claims["user"]
+	log.Printf("User: %s", user)
+
 	pageStr := c.Query("page")
 	limitStr := c.Query("limit")
 	q := c.Query("q")
@@ -54,7 +61,7 @@ func CreateUser(c *fiber.Ctx) error {
 		LastName:  user.LastName,
 		Title:     user.Title,
 		Email:     strings.ToLower(user.Email),
-		Password:  hash(user.Password),
+		Password:  Hash(user.Password),
 		Address: Address{
 			City:     user.Address.City,
 			Street:   user.Address.Street,
@@ -76,10 +83,12 @@ type Message struct {
 	Content string `json:"content"`
 }
 
-func hash(password string) string {
+func Hash(password string) string {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return string(hashedPassword)
+	hashed := string(hashedPassword)
+	log.Printf("Hashed Password: %s", hashed)
+	return hashed
 }

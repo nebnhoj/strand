@@ -14,11 +14,6 @@ type ErrorResponse struct {
 	Value       interface{} `json:"value" value:"error"`
 }
 
-type GlobalErrorHandlerResp struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-}
-
 func Validator(data interface{}) []ErrorResponse {
 	validationErrors := []ErrorResponse{}
 
@@ -37,3 +32,5 @@ func Validator(data interface{}) []ErrorResponse {
 
 	return validationErrors
 }
+ 
+
