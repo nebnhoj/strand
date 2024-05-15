@@ -24,6 +24,9 @@ Before running this application, make sure you have the following installed:
 3. Install dependencies:
     ```bash
     go mod tidy
+3. Create .env from .env.example:
+    ```bash
+    cp .env.example .env
 4. Start the application with Air:
     ```bash
     air 

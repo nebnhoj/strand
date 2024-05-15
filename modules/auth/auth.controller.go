@@ -24,7 +24,7 @@ func Authenticate(c *fiber.Ctx) error {
 	}
 	user, err := users.GetUserByEmail(auth.Email)
 	if err != nil {
-		return helpers.ResponseError(c, http.StatusInternalServerError, err)
+		return helpers.ResponseError(c, http.StatusUnauthorized, errors.UNAUTHORIZE)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(auth.Password))
