@@ -72,10 +72,6 @@ func CreateUser(c *fiber.Ctx) error {
 
 }
 
-type Message struct {
-	Content string `json:"content"`
-}
-
 func Hash(password string) string {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {

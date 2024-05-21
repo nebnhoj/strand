@@ -5,16 +5,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/nebnhoj/strand/helpers"
-	appJWT "github.com/nebnhoj/strand/middlewares/jwt"
-	"golang.org/x/crypto/bcrypt"
-
-	errors "github.com/nebnhoj/strand/helpers/errors"
-	users "github.com/nebnhoj/strand/modules/users"
 )
 
 func Authenticate(c *fiber.Ctx) error {
 	var auth Auth
-	//validate the request body
 	if err := c.BodyParser(&auth); err != nil {
 		return helpers.ResponseError(c, http.StatusBadRequest, err)
 	}
@@ -22,20 +16,11 @@ func Authenticate(c *fiber.Ctx) error {
 	if errs := helpers.Validator(auth); len(errs) > 0 && errs[0].Error {
 		return helpers.ResponseError(c, http.StatusBadRequest, errs)
 	}
-	user, err := users.GetUserByEmail(auth.Email)
+
+	token, err := GetJWTToken(auth)
 	if err != nil {
-		return helpers.ResponseError(c, http.StatusUnauthorized, errors.UNAUTHORIZE)
+		return helpers.ResponseError(c, http.StatusUnauthorized, err.Error())
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(auth.Password))
-	if err != nil {
-
-		return helpers.ResponseError(c, http.StatusUnauthorized, errors.UNAUTHORIZE)
-	}
-
-	t, err := appJWT.CreateJWTClaim(user)
-	if err != nil {
-		return helpers.ResponseError(c, http.StatusInternalServerError, err.Error())
-	}
-	return helpers.ResponseSuccess(c, http.StatusOK, t)
+	return helpers.ResponseSuccess(c, http.StatusOK, token)
 }

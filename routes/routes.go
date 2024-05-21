@@ -2,29 +2,31 @@ package routes
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/nebnhoj/strand/middlewares/jwt"
+	middlewares "github.com/nebnhoj/strand/middlewares/jwt"
 	auth "github.com/nebnhoj/strand/modules/auth"
-	schools "github.com/nebnhoj/strand/modules/schools"
+	todos "github.com/nebnhoj/strand/modules/todos"
 	users "github.com/nebnhoj/strand/modules/users"
 )
 
 func BindRoutes(router fiber.Router) {
-	router.Route("/", UserRoute)
-	router.Route("/", SchoolRoute)
-	router.Route("/", AuthRoute)
+	router.Route("/", UserRoutes)
+	router.Route("/", TodoRoutes)
+	router.Route("/", AuthRoutes)
 
 }
 
-func UserRoute(router fiber.Router) {
-	userRoute := router.Group("/users", jwt.Protected(), jwt.HasAdminRole)
+func UserRoutes(router fiber.Router) {
+	userRoute := router.Group("/users", middlewares.Protected(), middlewares.HasAdminRole)
 	userRoute.Get("", users.GetUsers).Name("Get Users")
 	userRoute.Get("/:id", users.GetUser).Name("Get User By ID")
 	userRoute.Post("", users.CreateUser).Name("Create User")
 }
-func SchoolRoute(router fiber.Router) {
-	router.Get("/schools", schools.ShowHelloWorld).Name("Get Schools")
+func TodoRoutes(router fiber.Router) {
+	router.Post("/todos", todos.CreateTodo).Name("Create Todos")
+	router.Get("/todos", todos.FindAll).Name("Get Todos")
+
 }
 
-func AuthRoute(router fiber.Router) {
+func AuthRoutes(router fiber.Router) {
 	router.Post("/auth", auth.Authenticate).Name("Authenticate User")
 }

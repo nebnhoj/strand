@@ -1,0 +1,37 @@
+version: '3.8'
+    
+services:
+  mysql:
+    image: mysql:latest
+    volumes:
+      - /Users/jb/development/stash/data/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: stash
+      MYSQL_USER: localuser
+      MYSQL_PASSWORD: password
+      MYSQL_TCP_PORT: 3306
+    ports:
+    - "3306:3306"
+  mongodb:
+    image: mongo:5.0
+    container_name: mongodb_container
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: stash
+      MONGO_INITDB_ROOT_PASSWORD: stashmongo
+    volumes:
+      - /Users/jb/development/stash/data/mongodb:/data/db
+    ports:
+      - "27017:27017"
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - /Users/jb/development/stash/data/redis:/data/db
+      - /Users/jb/development/stash/data/redis/redis.conf
+    environment:
+      - REDIS_PASSWORD=my-password
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=16
