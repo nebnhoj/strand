@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/contrib/swagger"
 	fiber "github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 
 	configs "github.com/nebnhoj/strand/configs"
@@ -24,14 +25,20 @@ import (
 // @host localhost:3000
 // @BasePath /api/
 func main() {
+
 	app := fiber.New(configs.SetFiberConfig())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:5173, http://127.0.0.1",
+		AllowHeaders: "Origin, Content-Type, Accept",
+		AllowMethods: "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+	}))
+
 	cfg := swagger.Config{
 		BasePath: "/api/",
 		FilePath: "./docs/swagger.json",
 		Path:     "docs",
 		Title:    "Swagger API Docs",
 	}
-
 	app.Use(swagger.New(cfg))
 	app.Use(logger.New())
 	routes.BindRoutes(app)

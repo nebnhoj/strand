@@ -2,11 +2,9 @@ package todos
 
 import (
 	"context"
-	"encoding/json"
 	"time"
 
 	"github.com/nebnhoj/strand/configs"
-	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,11 +12,6 @@ import (
 )
 
 var todoCollection *mongo.Collection = configs.GetCollection(configs.DB, "todos")
-var rdb = redis.NewClient(&redis.Options{
-	Addr:     "localhost:6379", // Redis server address
-	Password: "",               // No password
-	DB:       0,                // Default database
-})
 
 func create(todo Todo) (id any, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -36,7 +29,7 @@ func create(todo Todo) (id any, err error) {
 	return data, nil
 }
 
-func getAllTodos(q string, page int, limit int) (todos []Todo, err error) {
+func getAllTodos(q string, page int, limit int) (todos []Todo, count int64, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	var results []Todo
@@ -61,28 +54,21 @@ func getAllTodos(q string, page int, limit int) (todos []Todo, err error) {
 		var elem Todo
 		err := cursor.Decode(&elem)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 
 		}
 		results = append(results, elem)
 	}
-	if len(results) < 1 {
-		return []Todo{}, err
-	}
-
+	total, err := todoCollection.CountDocuments(ctx,
+		bson.M{
+			"$or": []bson.M{
+				{"name": primitive.Regex{Pattern: q, Options: "i"}},
+				{"details": primitive.Regex{Pattern: q, Options: "i"}},
+			},
+		})
 	if err != nil {
-		return nil,err
+		return nil, 0, err
 	}
 
-	jsonData, err := json.Marshal(todos)
-	if err != nil {
-		return nil,err
-
-	}
-	err = rdb.Set(context.Background(), "todos", jsonData, 60*time.Hour).Err()
-	if err != nil {
-		return nil,err
-
-	}
-	return results, err
+	return results, total, err
 }

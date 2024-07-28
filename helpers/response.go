@@ -13,6 +13,18 @@ func ResponseSuccess(c *fiber.Ctx, status int, result any) error {
 		})
 
 }
+
+func ResponsePaginated(c *fiber.Ctx, status int, result any, total int64) error {
+	return c.Status(status).JSON(
+		Success{
+			Status:  status,
+			Message: "success",
+			Data:    result,
+			Total:   total,
+		})
+
+}
+
 func ResponseError(c *fiber.Ctx, status int, error any) error {
 	return c.Status(status).JSON(
 		Error{
@@ -25,6 +37,7 @@ type Success struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
 	Data    any    `json:"data"`
+	Total   int64  `json:"total,omitempty" `
 }
 
 type Error struct {

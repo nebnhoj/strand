@@ -12,12 +12,15 @@ import (
 // BindRoutes sets up all the routes for the application.
 // It registers the user, todo, and authentication routes to the provided router.
 func BindRoutes(router fiber.Router) {
+
+	api := router.Group("/api")
+
 	// Register the routes for user-related operations
-	router.Route("/", UserRoutes)
+	api.Route("/", UserRoutes)
 	// Register the routes for todo-related operations
-	router.Route("/", TodoRoutes)
+	api.Route("/", TodoRoutes)
 	// Register the routes for authentication-related operations
-	router.Route("/", AuthRoutes)
+	api.Route("/", AuthRoutes)
 }
 
 func UserRoutes(router fiber.Router) {

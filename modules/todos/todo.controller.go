@@ -1,11 +1,8 @@
 package todos
 
 import (
-	"context"
-	"encoding/json"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -33,28 +30,6 @@ func CreateTodo(c *fiber.Ctx) error {
 		return helpers.ResponseError(c, http.StatusInternalServerError, err.Error())
 	}
 
-	oldRedisData, err := rdb.Get(context.Background(), c.Path()).Result()
-	if err != nil {
-		return helpers.ResponseError(c, http.StatusInternalServerError, err.Error())
-	}
-
-	var retrievedClaims []Todo
-	err = json.Unmarshal([]byte(oldRedisData), &retrievedClaims)
-	if err != nil {
-		return helpers.ResponseError(c, http.StatusInternalServerError, err.Error())
-
-	}
-	retrievedClaims = append(retrievedClaims, newTodo)
-	jsonData, err := json.Marshal(retrievedClaims)
-	if err != nil {
-		return helpers.ResponseError(c, http.StatusInternalServerError, err.Error())
-
-	}
-	err = rdb.Set(context.Background(), c.Path(), jsonData, 60*time.Hour).Err()
-	if err != nil {
-		return helpers.ResponseError(c, http.StatusInternalServerError, err.Error())
-	}
-
 	return helpers.ResponseSuccess(c, http.StatusOK, result)
 }
 
@@ -62,33 +37,14 @@ func FindAll(c *fiber.Ctx) error {
 	page, _ := strconv.Atoi(c.Query("page"))
 	limit, _ := strconv.Atoi(c.Query("limit"))
 	q := c.Query("q")
-	data, err := rdb.Get(context.Background(), c.OriginalURL()).Result()
-	if err == nil {
-		var retrievedClaims []Todo
-		err = json.Unmarshal([]byte(data), &retrievedClaims)
-		if err != nil {
-			return helpers.ResponseError(c, http.StatusInternalServerError, err.Error())
-		}
-		return helpers.ResponseSuccess(c, http.StatusOK, retrievedClaims)
-	}
 
 	// Convert pagination parameters to integers
 
-	todos, err := getAllTodos(q, page, limit)
+	todos, count, err := getAllTodos(q, page, limit)
 	if err != nil {
 		return helpers.ResponseError(c, http.StatusInternalServerError, err.Error())
 	}
-
-	jsonData, err := json.Marshal(todos)
-	if err != nil {
-		return helpers.ResponseError(c, http.StatusInternalServerError, err.Error())
-	}
-	err = rdb.Set(context.Background(), c.OriginalURL(), jsonData, 60*time.Hour).Err()
-	if err != nil {
-		return helpers.ResponseError(c, http.StatusInternalServerError, err.Error())
-	}
-
-	return helpers.ResponseSuccess(c, http.StatusOK, todos)
+	return helpers.ResponsePaginated(c, http.StatusOK, todos, count)
 }
 
 type Message struct {
