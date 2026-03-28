@@ -1,31 +1,6 @@
 basePath: /api
 definitions:
-  auth.Auth:
-    properties:
-      email:
-        type: string
-      password:
-        type: string
-    required:
-    - email
-    - password
-    type: object
-  helpers.Error:
-    properties:
-      message: {}
-      status:
-        type: integer
-    type: object
-  todos.Todo:
-    properties:
-      details:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-    type: object
-  users.Address:
+  AddressRequest:
     properties:
       city:
         type: string
@@ -35,45 +10,45 @@ definitions:
         type: string
       street:
         type: string
-    required:
-    - city
     type: object
-  users.User:
+  AuthRequest:
     properties:
-      address:
-        $ref: '#/definitions/users.Address'
+      email:
+        example: admin@strand.dev
+        type: string
+      password:
+        example: password
+        type: string
+    type: object
+  AuthResponse:
+    properties:
       email:
         type: string
-      first_name:
-        type: string
-      id:
-        type: string
-      last_name:
-        type: string
-      roles:
+      permissions:
         items:
           type: string
         type: array
-      title:
+      token:
         type: string
-    required:
-    - address
-    - first_name
-    - last_name
-    - roles
-    - title
+      user_id:
+        type: string
     type: object
-  users.UserDTO:
+  CreateTodoRequest:
+    properties:
+      details:
+        type: string
+      name:
+        type: string
+    type: object
+  CreateUserRequest:
     properties:
       address:
-        $ref: '#/definitions/users.Address'
+        $ref: '#/definitions/AddressRequest'
       confirm_password:
         type: string
       email:
         type: string
       first_name:
-        type: string
-      id:
         type: string
       last_name:
         type: string
@@ -85,14 +60,40 @@ definitions:
         type: array
       title:
         type: string
-    required:
-    - address
-    - confirm_password
-    - first_name
-    - last_name
-    - password
-    - roles
-    - title
+    type: object
+  ErrorResponse:
+    properties:
+      message: {}
+      status:
+        type: integer
+    type: object
+  TodoResponse:
+    properties:
+      details:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  UserResponse:
+    properties:
+      address:
+        $ref: '#/definitions/AddressRequest'
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
     type: object
 host: localhost:3001
 info:
@@ -105,14 +106,35 @@ paths:
     post:
       consumes:
       - application/json
-      description: Authenticate with email and password, returns a JWT token
+      description: Returns a JWT token for valid credentials
       parameters:
-      - description: User credentials
+      - description: Credentials
         in: body
-        name: credentials
+        name: body
         required: true
         schema:
-          $ref: '#/definitions/auth.Auth'
+          $ref: '#/definitions/AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Authenticate user
+      tags:
+      - auth
+  /cache:
+    delete:
+      description: Clears all entries from the Redis cache (admin only)
       produces:
       - application/json
       responses:
@@ -122,20 +144,26 @@ paths:
             additionalProperties:
               type: string
             type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/helpers.Error'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/helpers.Error'
-      summary: Authenticate user
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Flush cache
       tags:
-      - auth
+      - cache
   /todos:
     get:
-      description: Get paginated list of todos
+      description: Paginated list of todos
       parameters:
       - description: Page number
         in: query
@@ -156,13 +184,23 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/todos.Todo'
+              $ref: '#/definitions/TodoResponse'
             type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/helpers.Error'
-      summary: Get all todos
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List todos
       tags:
       - todos
     post:
@@ -172,81 +210,10 @@ paths:
       parameters:
       - description: New todo payload
         in: body
-        name: todo
+        name: body
         required: true
         schema:
-          $ref: '#/definitions/todos.Todo'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/todos.Todo'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/helpers.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/helpers.Error'
-      summary: Create a todo
-      tags:
-      - todos
-  /users:
-    get:
-      description: Get paginated list of users (admin only)
-      parameters:
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Page size
-        in: query
-        name: limit
-        type: integer
-      - description: Search query
-        in: query
-        name: q
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/users.User'
-            type: array
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/helpers.Error'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/helpers.Error'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/helpers.Error'
-      security:
-      - BearerAuth: []
-      summary: Get all users
-      tags:
-      - users
-    post:
-      consumes:
-      - application/json
-      description: Create a new user (admin only)
-      parameters:
-      - description: New user payload
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/users.UserDTO'
+          $ref: '#/definitions/CreateTodoRequest'
       produces:
       - application/json
       responses:
@@ -259,22 +226,105 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/helpers.Error'
+            $ref: '#/definitions/ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/helpers.Error'
+            $ref: '#/definitions/ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/helpers.Error'
+            $ref: '#/definitions/ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/helpers.Error'
+            $ref: '#/definitions/ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Create a user
+      summary: Create todo
+      tags:
+      - todos
+  /users:
+    get:
+      description: Paginated list of users (admin only)
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/UserResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List users
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user (admin only)
+      parameters:
+      - description: New user payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create user
       tags:
       - users
   /users/{id}:
@@ -292,19 +342,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/users.User'
+            $ref: '#/definitions/UserResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/helpers.Error'
+            $ref: '#/definitions/ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/helpers.Error'
+            $ref: '#/definitions/ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/helpers.Error'
+            $ref: '#/definitions/ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get user by ID

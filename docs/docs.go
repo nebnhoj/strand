@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/auth": {
             "post": {
-                "description": "Authenticate with email and password, returns a JWT token",
+                "description": "Returns a JWT token for valid credentials",
                 "consumes": [
                     "application/json"
                 ],
@@ -30,15 +30,52 @@ const docTemplate = `{
                 "summary": "Authenticate user",
                 "parameters": [
                     {
-                        "description": "User credentials",
-                        "name": "credentials",
+                        "description": "Credentials",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.Auth"
+                            "$ref": "#/definitions/AuthRequest"
                         }
                     }
                 ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/AuthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/cache": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Clears all entries from the Redis cache (admin only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cache"
+                ],
+                "summary": "Flush cache",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -49,16 +86,22 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/helpers.Error"
-                        }
-                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/helpers.Error"
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -66,14 +109,19 @@ const docTemplate = `{
         },
         "/todos": {
             "get": {
-                "description": "Get paginated list of todos",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Paginated list of todos",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "todos"
                 ],
-                "summary": "Get all todos",
+                "summary": "List todos",
                 "parameters": [
                     {
                         "type": "integer",
@@ -100,19 +148,36 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/todos.Todo"
+                                "$ref": "#/definitions/TodoResponse"
                             }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/helpers.Error"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new todo item",
                 "consumes": [
                     "application/json"
@@ -123,35 +188,50 @@ const docTemplate = `{
                 "tags": [
                     "todos"
                 ],
-                "summary": "Create a todo",
+                "summary": "Create todo",
                 "parameters": [
                     {
                         "description": "New todo payload",
-                        "name": "todo",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/todos.Todo"
+                            "$ref": "#/definitions/CreateTodoRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/todos.Todo"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/helpers.Error"
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/helpers.Error"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -164,14 +244,14 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get paginated list of users (admin only)",
+                "description": "Paginated list of users (admin only)",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "users"
                 ],
-                "summary": "Get all users",
+                "summary": "List users",
                 "parameters": [
                     {
                         "type": "integer",
@@ -198,26 +278,26 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/users.User"
+                                "$ref": "#/definitions/UserResponse"
                             }
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/helpers.Error"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/helpers.Error"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/helpers.Error"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -238,15 +318,15 @@ const docTemplate = `{
                 "tags": [
                     "users"
                 ],
-                "summary": "Create a user",
+                "summary": "Create user",
                 "parameters": [
                     {
                         "description": "New user payload",
-                        "name": "user",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.UserDTO"
+                            "$ref": "#/definitions/CreateUserRequest"
                         }
                     }
                 ],
@@ -263,25 +343,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/helpers.Error"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/helpers.Error"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/helpers.Error"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/helpers.Error"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -315,25 +395,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/users.User"
+                            "$ref": "#/definitions/UserResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/helpers.Error"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/helpers.Error"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/helpers.Error"
+                            "$ref": "#/definitions/ErrorResponse"
                         }
                     }
                 }
@@ -341,49 +421,8 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "auth.Auth": {
+        "AddressRequest": {
             "type": "object",
-            "required": [
-                "email",
-                "password"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "helpers.Error": {
-            "type": "object",
-            "properties": {
-                "message": {},
-                "status": {
-                    "type": "integer"
-                }
-            }
-        },
-        "todos.Todo": {
-            "type": "object",
-            "properties": {
-                "details": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "users.Address": {
-            "type": "object",
-            "required": [
-                "city"
-            ],
             "properties": {
                 "city": {
                     "type": "string"
@@ -399,18 +438,58 @@ const docTemplate = `{
                 }
             }
         },
-        "users.User": {
+        "AuthRequest": {
             "type": "object",
-            "required": [
-                "address",
-                "first_name",
-                "last_name",
-                "roles",
-                "title"
-            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "admin@strand.dev"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                }
+            }
+        },
+        "AuthResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "token": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "CreateTodoRequest": {
+            "type": "object",
+            "properties": {
+                "details": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "CreateUserRequest": {
+            "type": "object",
             "properties": {
                 "address": {
-                    "$ref": "#/definitions/users.Address"
+                    "$ref": "#/definitions/AddressRequest"
+                },
+                "confirm_password": {
+                    "type": "string"
                 },
                 "email": {
                     "type": "string"
@@ -418,10 +497,10 @@ const docTemplate = `{
                 "first_name": {
                     "type": "string"
                 },
-                "id": {
+                "last_name": {
                     "type": "string"
                 },
-                "last_name": {
+                "password": {
                     "type": "string"
                 },
                 "roles": {
@@ -435,23 +514,34 @@ const docTemplate = `{
                 }
             }
         },
-        "users.UserDTO": {
+        "ErrorResponse": {
             "type": "object",
-            "required": [
-                "address",
-                "confirm_password",
-                "first_name",
-                "last_name",
-                "password",
-                "roles",
-                "title"
-            ],
+            "properties": {
+                "message": {},
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
+        "TodoResponse": {
+            "type": "object",
+            "properties": {
+                "details": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "UserResponse": {
+            "type": "object",
             "properties": {
                 "address": {
-                    "$ref": "#/definitions/users.Address"
-                },
-                "confirm_password": {
-                    "type": "string"
+                    "$ref": "#/definitions/AddressRequest"
                 },
                 "email": {
                     "type": "string"
@@ -463,9 +553,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "last_name": {
-                    "type": "string"
-                },
-                "password": {
                     "type": "string"
                 },
                 "roles": {
