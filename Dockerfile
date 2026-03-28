@@ -2,35 +2,27 @@
 FROM golang:alpine AS builder
 
 RUN adduser -D -g '' appuser
-RUN mkdir /app
-
 WORKDIR /app
 
-# copy go mod and sum files
-COPY . .
-
+COPY go.mod go.sum ./
 RUN go mod download
 
-# copy the source code
-COPY main.go .
+COPY . .
 
-# build the binary
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags="-w -s" -o /go/bin/app .
 
 RUN chmod 0555 /go/bin/app
 
 # STEP 2 build a small image
-# start from scratch
 FROM scratch
 
 WORKDIR /app
 
 COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /go/bin/app ./app_binary
+COPY --from=builder /app/docs ./docs
 
 USER appuser
-
-# Copy our static executable
-COPY --from=builder /go/bin/app ./app_binary
 
 EXPOSE 3000
 

@@ -49,6 +49,9 @@ func getAllTodos(q string, page int, limit int) (todos []Todo, count int64, err 
 				{"details": primitive.Regex{Pattern: q, Options: "i"}},
 			},
 		}, options)
+	if err != nil {
+		return nil, 0, err
+	}
 
 	for cursor.Next(ctx) {
 		var elem Todo

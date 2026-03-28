@@ -3,13 +3,24 @@ package auth
 import (
 	"net/http"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/nebnhoj/strand/helpers"
 )
 
-func Authenticate(c *fiber.Ctx) error {
+// Authenticate godoc
+// @Summary Authenticate user
+// @Description Authenticate with email and password, returns a JWT token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param credentials body Auth true "User credentials"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} helpers.Error
+// @Failure 401 {object} helpers.Error
+// @Router /auth [post]
+func Authenticate(c fiber.Ctx) error {
 	var auth Auth
-	if err := c.BodyParser(&auth); err != nil {
+	if err := c.Bind().Body(&auth); err != nil {
 		return helpers.ResponseError(c, http.StatusBadRequest, err)
 	}
 

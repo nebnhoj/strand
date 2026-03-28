@@ -1,10 +1,10 @@
 package helpers
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
-func ResponseSuccess(c *fiber.Ctx, status int, result any) error {
+func ResponseSuccess(c fiber.Ctx, status int, result any) error {
 	return c.Status(status).JSON(
 		Success{
 			Status:  status,
@@ -14,7 +14,7 @@ func ResponseSuccess(c *fiber.Ctx, status int, result any) error {
 
 }
 
-func ResponsePaginated(c *fiber.Ctx, status int, result any, total int64) error {
+func ResponsePaginated(c fiber.Ctx, status int, result any, total int64) error {
 	return c.Status(status).JSON(
 		Success{
 			Status:  status,
@@ -25,7 +25,7 @@ func ResponsePaginated(c *fiber.Ctx, status int, result any, total int64) error 
 
 }
 
-func ResponseError(c *fiber.Ctx, status int, error any) error {
+func ResponseError(c fiber.Ctx, status int, error any) error {
 	return c.Status(status).JSON(
 		Error{
 			Status:  status,
@@ -37,7 +37,7 @@ type Success struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
 	Data    any    `json:"data"`
-	Total   int64  `json:"total,omitempty" `
+	Total   int64  `json:"total,omitempty"`
 }
 
 type Error struct {

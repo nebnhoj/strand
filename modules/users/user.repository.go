@@ -49,6 +49,9 @@ func getAllUsers(q string, page int, limit int) (users []User, err error) {
 				{"last_name": primitive.Regex{Pattern: q, Options: "i"}},
 			},
 		}, options)
+	if err != nil {
+		return nil, err
+	}
 
 	for cursor.Next(ctx) {
 		var elem User

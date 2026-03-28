@@ -1,20 +1,15 @@
 package configs
 
 import (
-	"log"
 	"os"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/joho/godotenv"
 )
 
 func SetFiberConfig() fiber.Config {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	godotenv.Load() //nolint: ignore missing .env in container (vars set via env_file)
 	return fiber.Config{
-		Prefork:       true,
 		CaseSensitive: true,
 		StrictRouting: true,
 		ServerHeader:  os.Getenv("APP_HEADER"),

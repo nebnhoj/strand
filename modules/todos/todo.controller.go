@@ -4,15 +4,25 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 	"github.com/nebnhoj/strand/helpers"
 )
 
-func CreateTodo(c *fiber.Ctx) error {
+// CreateTodo godoc
+// @Summary Create a todo
+// @Description Create a new todo item
+// @Tags todos
+// @Accept json
+// @Produce json
+// @Param todo body Todo true "New todo payload"
+// @Success 200 {object} Todo
+// @Failure 400 {object} helpers.Error
+// @Failure 500 {object} helpers.Error
+// @Router /todos [post]
+func CreateTodo(c fiber.Ctx) error {
 	var todo Todo
-	//validate the request body
-	if err := c.BodyParser(&todo); err != nil {
+	if err := c.Bind().Body(&todo); err != nil {
 		return helpers.ResponseError(c, http.StatusBadRequest, err)
 	}
 
@@ -33,12 +43,21 @@ func CreateTodo(c *fiber.Ctx) error {
 	return helpers.ResponseSuccess(c, http.StatusOK, result)
 }
 
-func FindAll(c *fiber.Ctx) error {
+// FindAll godoc
+// @Summary Get all todos
+// @Description Get paginated list of todos
+// @Tags todos
+// @Produce json
+// @Param page query int false "Page number"
+// @Param limit query int false "Page size"
+// @Param q query string false "Search query"
+// @Success 200 {array} Todo
+// @Failure 500 {object} helpers.Error
+// @Router /todos [get]
+func FindAll(c fiber.Ctx) error {
 	page, _ := strconv.Atoi(c.Query("page"))
 	limit, _ := strconv.Atoi(c.Query("limit"))
 	q := c.Query("q")
-
-	// Convert pagination parameters to integers
 
 	todos, count, err := getAllTodos(q, page, limit)
 	if err != nil {

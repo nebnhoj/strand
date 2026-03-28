@@ -1,16 +1,319 @@
-basePath: /api/
-host: localhost:3000
+basePath: /api
+definitions:
+  auth.Auth:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  helpers.Error:
+    properties:
+      message: {}
+      status:
+        type: integer
+    type: object
+  todos.Todo:
+    properties:
+      details:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  users.Address:
+    properties:
+      city:
+        type: string
+      country:
+        type: string
+      province:
+        type: string
+      street:
+        type: string
+    required:
+    - city
+    type: object
+  users.User:
+    properties:
+      address:
+        $ref: '#/definitions/users.Address'
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    required:
+    - address
+    - first_name
+    - last_name
+    - roles
+    - title
+    type: object
+  users.UserDTO:
+    properties:
+      address:
+        $ref: '#/definitions/users.Address'
+      confirm_password:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    required:
+    - address
+    - confirm_password
+    - first_name
+    - last_name
+    - password
+    - roles
+    - title
+    type: object
+host: localhost:3001
 info:
-  contact:
-    email: support@swagger.io
-    name: API Support
-    url: http://www.swagger.io/support
-  description: This is a sample server for a to-do application.
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: http://swagger.io/terms/
-  title: Your API
+  contact: {}
+  description: REST API for the Strand application.
+  title: Strand API
   version: "1.0"
-paths: {}
+paths:
+  /auth:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate with email and password, returns a JWT token
+      parameters:
+      - description: User credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/auth.Auth'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      summary: Authenticate user
+      tags:
+      - auth
+  /todos:
+    get:
+      description: Get paginated list of todos
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/todos.Todo'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      summary: Get all todos
+      tags:
+      - todos
+    post:
+      consumes:
+      - application/json
+      description: Create a new todo item
+      parameters:
+      - description: New todo payload
+        in: body
+        name: todo
+        required: true
+        schema:
+          $ref: '#/definitions/todos.Todo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/todos.Todo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      summary: Create a todo
+      tags:
+      - todos
+  /users:
+    get:
+      description: Get paginated list of users (admin only)
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: limit
+        type: integer
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/users.User'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Get all users
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user (admin only)
+      parameters:
+      - description: New user payload
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/users.UserDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Create a user
+      tags:
+      - users
+  /users/{id}:
+    get:
+      description: Get a single user by their ID (admin only)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helpers.Error'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/helpers.Error'
+      security:
+      - BearerAuth: []
+      summary: Get user by ID
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    description: 'Enter: Bearer {token}'
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
